@@ -1,1 +1,4 @@
 database.ini
+.vscode
+__pycache__
+*venv*
