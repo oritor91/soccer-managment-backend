@@ -96,7 +96,7 @@ class AppController:
 
         Returns:
             bool: True if the player is updated successfully, False otherwise.
-        
+
         Raises:
             Exception: If the player is not found or failed to update.
         """
