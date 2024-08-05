@@ -265,10 +265,16 @@ class AppController:
         print("Groups:")
         print("Group A:")
         print(",".join([player.name for player in group_a]))
+        average_a = sum([player.skill_level for player in group_a]) / len(group_a)
+        print(f"Average skill level a: {average_a}")
         print("Group B:")
         print(",".join([player.name for player in group_b]))
+        average_b = sum([player.skill_level for player in group_b]) / len(group_b)
+        print(f"Average skill level b: {average_b}")
         print("Group C:")
         print(",".join([player.name for player in group_c]))
+        average_c = sum([player.skill_level for player in group_c]) / len(group_c)
+        print(f"Average skill level c: {average_c}")
         return {
             "group_a": group_a,
             "group_b": group_b,

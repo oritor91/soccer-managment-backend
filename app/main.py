@@ -30,7 +30,6 @@ async def create_player(player: Player) -> bool:
     Returns:
         bool: True if the player is created successfully, False otherwise.
     """
-    print(player)
     return app.controller.create_player(player)
 
 
@@ -50,7 +49,6 @@ async def update_player(player_update: PlayerUpdateRequest) -> bool:
         HTTPException: If any other error occurs during the update process.
     """
     try:
-        print(f"Updating player: {player_update}")
         success = app.controller.update_player(player_update)
         if not success:
             raise HTTPException(status_code=404, detail="Player not found")

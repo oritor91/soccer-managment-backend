@@ -24,7 +24,6 @@ class DbConnection:
         It also initializes the client and database objects for further use.
         """
         self.client = MongoClient(MONGODB_URL)
-        print(self.client.list_database_names())
         self.db = self.client[SOCCER_MANAGEMENT_DB]
     
     @property
