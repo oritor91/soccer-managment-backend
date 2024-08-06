@@ -19,8 +19,6 @@ tasks:
       - "{{.VENV_DIR}}/bin/pip install -r {{.REQUIREMENTS_FILE}}"
     deps:
       - create-venv
-    sources:
-      - {{.REQUIREMENTS_FILE}}
 
   # Task to clean up the virtual environment
   clean:
@@ -33,6 +31,6 @@ tasks:
   run:
     desc: "Run the application"
     cmds:
-      - "uvicorn app.main:app --reload" # Replace with your main script path
+      - "uvicorn app.main:app --reload --env-file .env" # Replace with your main script path
     deps:
       - install-deps
