@@ -85,7 +85,7 @@ async def delete_player(player: Player) -> bool:
     return app.controller.delete_player(player)
 
 
-@app.get("/players")
+@app.get("/player")
 async def read_all_players() -> List[Player]:
     """
     Get all players.
@@ -96,7 +96,7 @@ async def read_all_players() -> List[Player]:
     return app.controller.get_all_players()
 
 
-@app.get("/games")
+@app.get("/game")
 def read_games() -> List[Game]:
     """
     Get all games.
@@ -140,7 +140,7 @@ def delete_game(game: Game):
     app.controller.delete_game(game)
 
 
-@app.post("/games/{game_id}/sort-groups")
+@app.post("/game/{game_id}/sort-groups")
 def sort_groups(game_id: str) -> Dict[str, List[Player]]:
     """
     Sort groups for a game.

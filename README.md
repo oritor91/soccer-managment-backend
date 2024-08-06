@@ -21,13 +21,10 @@ Create virtual env
 
 - `task create-venv`
 
-Installing Dependencies
-
-- `task install-deps`
 
 Run development server locally
 
 - `task run`
 
-
-
+This will run the backend server on your localhost at
+http://127.0.0.1:8000/docs
