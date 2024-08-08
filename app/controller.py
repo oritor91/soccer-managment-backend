@@ -104,7 +104,6 @@ class AppController:
         new_player = player_update.new
         existing_player = self.db.players_db.find_one({"_id": old_player.id})
         if existing_player:
-            print(f"Player found: {existing_player}")
             new_player_dict = new_player.model_dump()
             new_player_dict["_id"] = new_player.id
             update_result = self.db.players_db.update_one(
@@ -158,7 +157,8 @@ class AppController:
                 date=db_game.get("date"),
                 time=db_game.get("time"),
                 players=players,
-                location=db_game.get("location")
+                location=db_game.get("location"),
+                sorted_groups=db_game.get("sorted_groups", {})
             )
             games.append(game)
         return games
@@ -262,17 +262,10 @@ class AppController:
                     group_c.append(player)
                 group_selector = (group_selector + 1) % 3
         # Print the groups for deubgging purposes
-        print("Groups:")
-        print("Group A:")
-        print(",".join([player.name for player in group_a]))
         average_a = sum([player.skill_level for player in group_a]) / len(group_a)
         print(f"Average skill level a: {average_a}")
-        print("Group B:")
-        print(",".join([player.name for player in group_b]))
         average_b = sum([player.skill_level for player in group_b]) / len(group_b)
         print(f"Average skill level b: {average_b}")
-        print("Group C:")
-        print(",".join([player.name for player in group_c]))
         average_c = sum([player.skill_level for player in group_c]) / len(group_c)
         print(f"Average skill level c: {average_c}")
         return {
@@ -280,3 +273,30 @@ class AppController:
             "group_b": group_b,
             "group_c": group_c
         }
+    
+    def save_sorted_groups(self, game_id: str, sorted_groups: Dict):
+        """
+        Saves the sorted groups for a game.
+
+        Args:
+            game_id (str): The ID of the game.
+            sorted_groups (Dict): A dictionary containing the sorted groups.
+
+        Returns:
+            dict: A dictionary containing a message indicating the success of the operation.
+
+        Raises:
+            Exception: If the game is not found.
+        """
+        game_dict: dict = self.db.games_db.find_one({"_id": game_id})
+        if not game_dict:
+            raise Exception("Game not found")
+        game_dict.pop("_id")
+        game = Game(**game_dict)
+        game.sorted_groups = sorted_groups["sortedGroups"]
+        game_dict = game.model_dump()
+        result = self.db.games_db.update_one({"_id": game_id}, {"$set": game_dict})
+        if result.modified_count:
+            return {"message": "Sorted groups saved successfully"}
+        else:
+            raise Exception("Failed to save sorted groups")

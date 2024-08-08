@@ -85,7 +85,7 @@ async def delete_player(player: Player) -> bool:
     return app.controller.delete_player(player)
 
 
-@app.get("/player")
+@app.get("/players")
 async def read_all_players() -> List[Player]:
     """
     Get all players.
@@ -96,7 +96,7 @@ async def read_all_players() -> List[Player]:
     return app.controller.get_all_players()
 
 
-@app.get("/game")
+@app.get("/games")
 def read_games() -> List[Game]:
     """
     Get all games.
@@ -152,6 +152,19 @@ def sort_groups(game_id: str) -> Dict[str, List[Player]]:
         Dict[str, List[Player]]: A dictionary containing the sorted groups.
     """
     return app.controller.sort_groups(game_id)
+
+@app.put("/game/{game_id}/save-groups")
+def save_sorted_groups(game_id: str, sorted_groups: Dict[str, Dict[str, List[Player]]]):
+    """
+    Sort groups for a game.
+
+    Args:
+        game_id (str): The ID of the game.
+
+    Returns:
+        Dict[str, List[Player]]: A dictionary containing the sorted groups.
+    """
+    app.controller.save_sorted_groups(game_id, sorted_groups)
 
 
 app.add_middleware(

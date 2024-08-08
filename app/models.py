@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 from pydantic import BaseModel
 
 
@@ -49,6 +49,7 @@ class Game(GameBase):
     Inherits from GameBase.
     """
     players: List[Player] = []
+    sorted_groups: Dict[str, List[Player]] = {}
 
     @property
     def id(self):
