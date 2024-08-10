@@ -4,3 +4,4 @@ pymongo
 pydantic
 python-dotenv
 go-task-bin
+pytest

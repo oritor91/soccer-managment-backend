@@ -2,7 +2,7 @@ from typing import List, Dict
 from fastapi import FastAPI
 from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from app.models import Player, PlayerUpdateRequest, Game
+from app.models import Player, Game, PlayerBase, GameBase
 from app.controller import AppController
 
 
@@ -20,7 +20,7 @@ app = MyApp()
 
 
 @app.post("/player")
-async def create_player(player: Player) -> bool:
+async def create_player(player: PlayerBase) -> bool:
     """
     Create a new player.
 
@@ -33,8 +33,8 @@ async def create_player(player: Player) -> bool:
     return app.controller.create_player(player)
 
 
-@app.put("/player")
-async def update_player(player_update: PlayerUpdateRequest) -> bool:
+@app.put("/player/{player_id}")
+async def update_player(player_id: str, player: PlayerBase) -> bool:
     """
     Update an existing player.
 
@@ -49,7 +49,7 @@ async def update_player(player_update: PlayerUpdateRequest) -> bool:
         HTTPException: If any other error occurs during the update process.
     """
     try:
-        success = app.controller.update_player(player_update)
+        success = app.controller.update_player(player_id, player)
         if not success:
             raise HTTPException(status_code=404, detail="Player not found")
         return success
@@ -71,8 +71,8 @@ async def read_players(player_name: str) -> List[Player]:
     return app.controller.get_player_by_name(player_name)
 
 
-@app.delete("/player")
-async def delete_player(player: Player) -> bool:
+@app.delete("/player/{player_id}")
+async def delete_player(player_id: str) -> bool:
     """
     Delete a player.
 
@@ -82,7 +82,7 @@ async def delete_player(player: Player) -> bool:
     Returns:
         bool: True if the player is deleted successfully, False otherwise.
     """
-    return app.controller.delete_player(player)
+    return app.controller.delete_player(player_id)
 
 
 @app.get("/players")
@@ -108,36 +108,36 @@ def read_games() -> List[Game]:
 
 
 @app.post("/game")
-def create_game(game: Game):
+def create_game(game: GameBase) -> Game:
     """
     Create a new game.
 
     Args:
         game (Game): The game object to create.
     """
-    app.controller.create_game(game)
+    return app.controller.create_game(game)
 
 
-@app.put("/game")
-def update_game(game: Game):
+@app.put("/game/{game_id}")
+def update_game(game_id: str, game: Game):
     """
     Update an existing game.
 
     Args:
         game (Game): The game object to update.
     """
-    app.controller.update_game(game)
+    app.controller.update_game(game_id, game)
 
 
-@app.delete("/game")
-def delete_game(game: Game):
+@app.delete("/game/{game_id}")
+def delete_game(game_id: str):
     """
     Delete a game.
 
     Args:
         game (Game): The game object to delete.
     """
-    app.controller.delete_game(game)
+    app.controller.delete_game(game_id)
 
 
 @app.post("/game/{game_id}/sort-groups")

@@ -1,8 +1,10 @@
 from typing import List, Dict
 import random
 from app.database import DbConnection
-from app.models import Player, PlayerUpdateRequest, Game
+from pymongo.results import UpdateResult
+from app.models import Player, PlayerBase, Game, GameBase
 from collections import defaultdict
+from bson import ObjectId
 
 
 class AppController:
@@ -16,7 +18,7 @@ class AppController:
         """
         self.db = DbConnection()
     
-    def create_player(self, player: Player) -> bool:
+    def create_player(self, player: PlayerBase) -> bool:
         """
         Creates a new player and saves it to the database.
 
@@ -28,14 +30,13 @@ class AppController:
         """
         try:
             player_dict = player.model_dump()
-            player_dict["_id"] = player.id
-            self.db.players_db.insert_one(player_dict)
+            res = self.db.players_db.insert_one(player_dict)
             return True
         except Exception as e:
             print(e)
             return False
     
-    def get_player_by_id(self, id: str) -> Player:
+    def get_player_by_id(self, id: ObjectId) -> Player:
         """
         Retrieves a player from the database based on the player's ID.
 
@@ -71,9 +72,10 @@ class AppController:
             List[Player]: A list of player objects.
         """
         players = self.db.players_db.find()
-        return [Player(**player) for player in players]
+        res = [Player(**player) for player in players]
+        return res
 
-    def delete_player(self, player: Player) -> bool:
+    def delete_player(self, player_id: str) -> bool:
         """
         Deletes a player from the database.
 
@@ -83,16 +85,16 @@ class AppController:
         Returns:
             bool: True if the player is deleted successfully, False otherwise.
         """
-        query = {"_id": player.id}
+        query = {"_id": ObjectId(player_id)}
         self.db.players_db.delete_one(query)
         return True
     
-    def update_player(self, player_update: PlayerUpdateRequest) -> bool:
+    def update_player(self, player_id: str, player: PlayerBase) -> bool:
         """
         Updates a player in the database.
 
         Args:
-            player_update (PlayerUpdateRequest): The player update request object.
+            player (Player): The player object to be updated.
 
         Returns:
             bool: True if the player is updated successfully, False otherwise.
@@ -100,24 +102,15 @@ class AppController:
         Raises:
             Exception: If the player is not found or failed to update.
         """
-        old_player = player_update.old
-        new_player = player_update.new
-        existing_player = self.db.players_db.find_one({"_id": old_player.id})
-        if existing_player:
-            new_player_dict = new_player.model_dump()
-            new_player_dict["_id"] = new_player.id
-            update_result = self.db.players_db.update_one(
-                {"_id": old_player.id},
-                {"$set": new_player_dict}
-            )
-            if update_result.modified_count == 1:
-                return True
-            else:
-                raise Exception("Failed to update player.")
+        query = {"_id": ObjectId(player_id)}
+        player_dict = player.model_dump()
+        result: UpdateResult = self.db.players_db.update_one(query, {"$set": player_dict})
+        if result.modified_count > 0:
+            return True
         else:
-            return False
+            raise Exception(f"Player not found -> {result.raw_result}")
     
-    def create_game(self, game: Game):
+    def create_game(self, game: GameBase) -> Game:
         """
         Creates a new game and saves it to the database.
 
@@ -132,10 +125,9 @@ class AppController:
         """
         # Insert the game into the MongoDB collection
         game_dict = game.model_dump()
-        game_dict["_id"] = game.id
         result = self.db.games_db.insert_one(game_dict)
         if result.inserted_id:
-            return {"id": str(result.inserted_id)}
+            return Game(**game_dict)
         else:
             raise Exception("Game creation failed")
 
@@ -151,19 +143,11 @@ class AppController:
         games = []
         for db_game in games_cursor:
             db_game: dict
-            db_game.pop("_id")
-            players = [Player(**player) for player in db_game.get("players")]
-            game = Game(
-                date=db_game.get("date"),
-                time=db_game.get("time"),
-                players=players,
-                location=db_game.get("location"),
-                sorted_groups=db_game.get("sorted_groups", {})
-            )
+            game = Game(**db_game)
             games.append(game)
         return games
 
-    def update_game(self, game: Game):
+    def update_game(self, game_id: str, game: Game):
         """
         Updates a game in the database.
 
@@ -176,15 +160,17 @@ class AppController:
         Raises:
             Exception: If the game is not found.
         """
+        print(game_id)
+        query = {"_id": ObjectId(game_id)}
         game_dict = game.model_dump()
-        # Update the game in the MongoDB collection
-        result = self.db.games_db.update_one({"_id": game.id}, {"$set": game_dict})
-        if result.matched_count:
-            return {"message": "Game updated successfully"}
+        print(game_dict)
+        result: UpdateResult = self.db.games_db.update_one(query, {"$set": game_dict})
+        if result.modified_count > 0:
+            return True
         else:
             raise Exception("Game not found")
 
-    def delete_game(self, game: Game):
+    def delete_game(self, game_id: str):
         """
         Deletes a game from the database.
 
@@ -197,7 +183,7 @@ class AppController:
         Raises:
             Exception: If the game is not found.
         """
-        result = self.db.games_db.delete_one({"_id": game.id})
+        result = self.db.games_db.delete_one({"_id": ObjectId(game_id)})
         if result.deleted_count:
             return {"message": "Game deleted successfully"}
         else:

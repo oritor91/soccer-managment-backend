@@ -1,5 +1,23 @@
 from typing import List, Dict
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from bson import ObjectId
+
+
+class PyObjectId(ObjectId):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v, field):
+        if not ObjectId.is_valid(v):
+            raise ValueError("Invalid ObjectId")
+        return ObjectId(v)
+
+    @classmethod
+    def __get_pydantic_json_schema__(cls, schema, field):
+        schema.update(type="string")
+        return schema
 
 
 class PlayerBase(BaseModel):
@@ -17,21 +35,11 @@ class Player(PlayerBase):
     Model for a player.
     Inherits from PlayerBase.
     """
-
-    @property
-    def id(self):
-        """
-        Returns the unique identifier for the player.
-        """
-        return f"{self.name}_{self.phone_number}"
-
-
-class PlayerUpdateRequest(BaseModel):
-    """
-    Model for updating a player.
-    """
-    old: Player
-    new: Player
+    id: PyObjectId = Field(alias="_id")
+    
+    class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
 
 
 class GameBase(BaseModel):
@@ -41,6 +49,8 @@ class GameBase(BaseModel):
     date: str
     time: str
     location: str
+    players: List[Player] = []
+    sorted_groups: Dict[str, List[Player]] = {}
 
 
 class Game(GameBase):
@@ -48,13 +58,9 @@ class Game(GameBase):
     Model for a game.
     Inherits from GameBase.
     """
-    players: List[Player] = []
-    sorted_groups: Dict[str, List[Player]] = {}
-
-    @property
-    def id(self):
-        """
-        Returns the unique identifier for the game.
-        """
-        return f"{self.date}_{self.time}"
+    id: PyObjectId = Field(alias="_id")
+    
+    class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
 
